@@ -1,0 +1,139 @@
+import { ListView, Button, TextEdit, LineEdit, ProgressIndicator, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "LAN Chat - High Performance Local Network Messenger";
+    min-width: 800px;
+    min-height: 600px;
+    preferred-width: 900px;
+    preferred-height: 700px;
+
+    callback send_message(string);
+    callback send_file(string);
+    callback select_file_click();
+    callback refresh_peers_click();
+    callback set_username(string);
+    callback accept_file(string, bool);
+    callback peer_selected(string);
+
+    in-out property <string> username: "User";
+    in-out property <bool> is_listening: false;
+    in-out property <string> status_text: "Not connected";
+    in-out property <string> current_peer;
+    in-out property <string> selected_file;
+    in-out property <float> transfer_progress;
+    in-out property <string> transfer_status;
+    in-out property <bool> has_incoming_transfer;
+    in-out property <string> incoming_filename;
+    in-out property <string> incoming_filesize;
+    in-out property <string> incoming_peer;
+
+    in-out property <[string]> peer_list: [];
+    in-out property <[string]> message_history: [];
+
+    callback new_message(string);
+
+    VerticalBox {
+        HorizontalBox {
+            Text { text: "Username:"; vertical-alignment: center; }
+            username_input := LineEdit {
+                text: root.username;
+            }
+            Button {
+                text: root.is_listening ? "Stop" : "Start";
+                clicked => {
+                    root.is_listening = !root.is_listening;
+                    if (root.is_listening) {
+                        root.set_username(username_input.text);
+                    }
+                }
+            }
+            Button {
+                text: "Refresh";
+                clicked => { root.refresh_peers_click(); }
+            }
+        }
+
+        HorizontalBox {
+            VerticalBox {
+                Text { text: "Online Peers"; font-weight: 700; }
+                peer_list_view := ListView {
+                    min-height: 300px;
+                    for peer in root.peer_list : Button {
+                        text: peer;
+                        clicked => { 
+                            root.peer_selected(peer);
+                        }
+                    }
+                }
+            }
+
+            VerticalBox {
+                Text { text: "Messages"; font-weight: 700; }
+                message_view := ListView {
+                    min-height: 300px;
+                    for msg in root.message_history : Text {
+                        text: msg;
+                        wrap: word-wrap;
+                        vertical-alignment: center;
+                    }
+                }
+                message_input := LineEdit {
+                    enabled: root.current_peer != "";
+                    accepted => {
+                        root.send_message(self.text);
+                        self.text = "";
+                    }
+                }
+                HorizontalBox {
+                    Button {
+                        text: "Send";
+                        enabled: root.current_peer != "";
+                        clicked => {
+                            root.send_message(message_input.text);
+                            message_input.text = "";
+                        }
+                    }
+                    Button {
+                        text: "Select File";
+                        enabled: root.current_peer != "";
+                        clicked => { root.select_file_click(); }
+                    }
+                }
+                if (root.selected_file != "") : Text {
+                    text: "Selected: " + root.selected_file;
+                }
+            }
+        }
+
+        if (root.has_incoming_transfer) : Rectangle {
+            background: #fff3cd;
+            VerticalBox {
+                Text { text: "Incoming File Transfer"; font-weight: 700; }
+                Text { text: "From: " + root.incoming_peer; }
+                Text { text: "File: " + root.incoming_filename + " (" + root.incoming_filesize + ")"; }
+                if (root.transfer_progress > 0 && root.transfer_progress < 1) : ProgressIndicator {
+                    progress: root.transfer_progress;
+                }
+                Text { text: root.transfer_status; }
+                HorizontalBox {
+                    Button {
+                        text: "Accept";
+                        clicked => { root.accept_file(root.incoming_filename, true); }
+                    }
+                    Button {
+                        text: "Decline";
+                        clicked => { root.accept_file(root.incoming_filename, false); }
+                    }
+                }
+            }
+        }
+
+        HorizontalBox {
+            Text { text: "Status: " + root.status_text; }
+            if (root.current_peer != "") : Text { 
+                text: "Selected: " + root.current_peer;
+                color: #0078d4;
+            }
+        }
+    }
+}
