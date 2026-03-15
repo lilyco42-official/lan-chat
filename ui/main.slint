@@ -1,7 +1,7 @@
 import { ListView, Button, TextEdit, LineEdit, ProgressIndicator, HorizontalBox, VerticalBox } from "std-widgets.slint";
 
 export component MainWindow inherits Window {
-    title: "LAN Chat - High Performance Local Network Messenger";
+    title: "局域网聊天 - 高性能局域网即时通讯工具";
     min-width: 800px;
     min-height: 600px;
     preferred-width: 900px;
@@ -15,9 +15,9 @@ export component MainWindow inherits Window {
     callback accept_file(string, bool);
     callback peer_selected(string);
 
-    in-out property <string> username: "User";
+    in-out property <string> username: "用户";
     in-out property <bool> is_listening: false;
-    in-out property <string> status_text: "Not connected";
+    in-out property <string> status_text: "未连接";
     in-out property <string> current_peer;
     in-out property <string> selected_file;
     in-out property <float> transfer_progress;
@@ -34,12 +34,12 @@ export component MainWindow inherits Window {
 
     VerticalBox {
         HorizontalBox {
-            Text { text: "Username:"; vertical-alignment: center; }
+            Text { text: "用户名:"; vertical-alignment: center; }
             username_input := LineEdit {
                 text: root.username;
             }
             Button {
-                text: root.is_listening ? "Stop" : "Start";
+                text: root.is_listening ? "停止" : "开始";
                 clicked => {
                     root.is_listening = !root.is_listening;
                     if (root.is_listening) {
@@ -48,14 +48,14 @@ export component MainWindow inherits Window {
                 }
             }
             Button {
-                text: "Refresh";
+                text: "刷新";
                 clicked => { root.refresh_peers_click(); }
             }
         }
 
         HorizontalBox {
             VerticalBox {
-                Text { text: "Online Peers"; font-weight: 700; }
+                Text { text: "在线用户"; font-weight: 700; }
                 peer_list_view := ListView {
                     min-height: 300px;
                     for peer in root.peer_list : Button {
@@ -68,7 +68,7 @@ export component MainWindow inherits Window {
             }
 
             VerticalBox {
-                Text { text: "Messages"; font-weight: 700; }
+                Text { text: "消息"; font-weight: 700; }
                 message_view := ListView {
                     min-height: 300px;
                     for msg in root.message_history : Text {
@@ -86,7 +86,7 @@ export component MainWindow inherits Window {
                 }
                 HorizontalBox {
                     Button {
-                        text: "Send";
+                        text: "发送";
                         enabled: root.current_peer != "";
                         clicked => {
                             root.send_message(message_input.text);
@@ -94,13 +94,13 @@ export component MainWindow inherits Window {
                         }
                     }
                     Button {
-                        text: "Select File";
+                        text: "选择文件";
                         enabled: root.current_peer != "";
                         clicked => { root.select_file_click(); }
                     }
                 }
                 if (root.selected_file != "") : Text {
-                    text: "Selected: " + root.selected_file;
+                    text: "已选择: " + root.selected_file;
                 }
             }
         }
@@ -108,20 +108,20 @@ export component MainWindow inherits Window {
         if (root.has_incoming_transfer) : Rectangle {
             background: #fff3cd;
             VerticalBox {
-                Text { text: "Incoming File Transfer"; font-weight: 700; }
-                Text { text: "From: " + root.incoming_peer; }
-                Text { text: "File: " + root.incoming_filename + " (" + root.incoming_filesize + ")"; }
+                Text { text: "接收文件"; font-weight: 700; }
+                Text { text: "来自: " + root.incoming_peer; }
+                Text { text: "文件: " + root.incoming_filename + " (" + root.incoming_filesize + ")"; }
                 if (root.transfer_progress > 0 && root.transfer_progress < 1) : ProgressIndicator {
                     progress: root.transfer_progress;
                 }
                 Text { text: root.transfer_status; }
                 HorizontalBox {
                     Button {
-                        text: "Accept";
+                        text: "接受";
                         clicked => { root.accept_file(root.incoming_filename, true); }
                     }
                     Button {
-                        text: "Decline";
+                        text: "拒绝";
                         clicked => { root.accept_file(root.incoming_filename, false); }
                     }
                 }
@@ -129,9 +129,9 @@ export component MainWindow inherits Window {
         }
 
         HorizontalBox {
-            Text { text: "Status: " + root.status_text; }
+            Text { text: "状态: " + root.status_text; }
             if (root.current_peer != "") : Text { 
-                text: "Selected: " + root.current_peer;
+                text: "当前: " + root.current_peer;
                 color: #0078d4;
             }
         }

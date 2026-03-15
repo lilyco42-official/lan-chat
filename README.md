@@ -1,4 +1,4 @@
-# LAN Chat
+# LAN Chat (局域网聊天)
 
 高性能局域网即时通讯工具，使用 Rust + Slint 开发。
 
@@ -20,7 +20,7 @@
 ### 前置要求
 
 - Rust 1.70+
-- Windows 10/11
+- Windows 10/11 或 Linux/macOS
 
 ### 编译
 
@@ -47,9 +47,9 @@ cargo run --release
 
 ## 使用方法
 
-1. 启动程序后，点击 **Refresh** 刷新在线用户列表
+1. 启动程序后，点击 **刷新** 刷新在线用户列表
 2. 点击列表中的用户选中
-3. 在消息框输入内容，点击 **Send** 发送消息
+3. 在消息框输入内容，点击 **发送** 发送消息
 
 ## 端口说明
 
@@ -70,6 +70,10 @@ lan-chat/
 ├── Cargo.toml     # 依赖配置
 └── build.rs      # 构建脚本
 ```
+
+## 下载预编译版本
+
+请访问 [Releases](https://github.com/lilyco42-official/lan-chat/releases) 页面下载预编译的二进制文件。
 
 ## 许可证
 
