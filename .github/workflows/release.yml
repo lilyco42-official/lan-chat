@@ -6,22 +6,26 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  build:
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             artifact-name: lan-chat-linux-x64
             target: x86_64-unknown-linux-gnu
+            ext: ""
           - os: macos-latest
             artifact-name: lan-chat-macos-x64
             target: x86_64-apple-darwin
+            ext: ""
           - os: macos-latest
             artifact-name: lan-chat-macos-arm64
             target: aarch64-apple-darwin
+            ext: ""
           - os: windows-latest
             artifact-name: lan-chat-windows-x64.exe
             target: x86_64-pc-windows-msvc
+            ext: .exe
 
     runs-on: ${{ matrix.os }}
 
@@ -32,66 +36,42 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Add Linux targets
-        if: matrix.os == 'ubuntu-latest'
-        run: rustup target add x86_64-unknown-linux-gnu
+      - name: Add targets
+        run: |
+          rustup target add ${{ matrix.target }}
 
       - name: Build release
         run: cargo build --release --locked --target ${{ matrix.target }}
 
-      - name: Package Linux
-        if: matrix.os == 'ubuntu-latest'
+      - name: Rename artifact
         run: |
-          cp target/${{ matrix.target }}/release/lan-chat ${{ matrix.artifact-name }}
-          chmod +x ${{ matrix.artifact-name }}
-
-      - name: Package macOS
-        if: matrix.os == 'macos-latest'
-        run: |
-          cp target/${{ matrix.target }}/release/lan-chat ${{ matrix.artifact-name }}
-          chmod +x ${{ matrix.artifact-name }}
-
-      - name: Package Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          cp target/${{ matrix.target }}/release/lan-chat.exe ${{ matrix.artifact-name }}
+          cp target/${{ matrix.target }}/release/lan-chat${{ matrix.ext }} ${{ matrix.artifact-name }}
+          ls -la ${{ matrix.artifact-name }}
 
       - name: Upload artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ github.event.inputs.upload_url }}
-          asset_path: ./${{ matrix.artifact-name }}
-          asset_name: ${{ matrix.artifact-name }}
-          asset_content_type: application/octet-stream
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-name }}
 
-  create-release:
+  release:
+    needs: build
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get tag
-        id: get_tag
-        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*/*
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_tag.outputs.TAG }}
-          release_name: lan-chat v${{ steps.get_tag.outputs.TAG }}
-          draft: false
-          prerelease: false
-
-  notify:
-    needs: [release, create-release]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Success
-        run: echo "Release completed!"
