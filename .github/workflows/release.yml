@@ -8,19 +8,12 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             artifact-name: lan-chat-linux-x64
             target: x86_64-unknown-linux-gnu
-            ext: ""
-          - os: macos-latest
-            artifact-name: lan-chat-macos-x64
-            target: x86_64-apple-darwin
-            ext: ""
-          - os: macos-latest
-            artifact-name: lan-chat-macos-arm64
-            target: aarch64-apple-darwin
             ext: ""
           - os: windows-latest
             artifact-name: lan-chat-windows-x64.exe
@@ -46,7 +39,6 @@ jobs:
       - name: Rename artifact
         run: |
           cp target/${{ matrix.target }}/release/lan-chat${{ matrix.ext }} ${{ matrix.artifact-name }}
-          ls -la ${{ matrix.artifact-name }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -60,16 +52,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*
           generate_release_notes: true
